@@ -1,2 +1,24 @@
+# Project-specific
 Specification.md
 agent-sandbox-policy-companion-files/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+packages/*/dist/
+
+# Build info
+*.tsbuildinfo
+pnpm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

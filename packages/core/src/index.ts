@@ -1,7 +1,2 @@
-export * from './types.js';
-export * from './parser.js';
-export * from './evaluator.js';
-export * from './redaction.js';
-export * from './ratelimit.js';
-export * from './trace.js';
-export * from './test-runner.js';
+// Placeholder - will be implemented in Phase 2
+export const VERSION = '0.1.0-draft';

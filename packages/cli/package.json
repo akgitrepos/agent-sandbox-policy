@@ -6,7 +6,9 @@
   "bin": {
     "asp": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -22,8 +24,13 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.3.0",
     "vitest": "^2.1.8"
   },
-  "keywords": ["asp", "cli", "policy"],
+  "keywords": [
+    "asp",
+    "cli",
+    "policy"
+  ],
   "license": "MIT"
 }
