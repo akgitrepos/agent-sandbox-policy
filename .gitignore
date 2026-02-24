@@ -9,6 +9,9 @@ node_modules/
 # Build outputs
 dist/
 packages/*/dist/
+docs/build/
+docs/dist/
+docs/.vitepress/dist/
 
 # Build info
 *.tsbuildinfo
