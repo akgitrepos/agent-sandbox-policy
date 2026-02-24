@@ -1,0 +1,23 @@
+{
+  "name": "@asp/schemas",
+  "version": "0.1.0-draft",
+  "description": "JSON Schemas for Agent Sandbox Policy",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"No tests yet\"",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["asp", "policy", "schema"],
+  "license": "MIT"
+}

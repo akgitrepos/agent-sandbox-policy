@@ -1,0 +1,29 @@
+{
+  "name": "@asp/cli",
+  "version": "0.1.0-draft",
+  "description": "CLI for Agent Sandbox Policy",
+  "type": "module",
+  "bin": {
+    "asp": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@asp/core": "workspace:*",
+    "@asp/schemas": "workspace:*",
+    "commander": "^12.1.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "vitest": "^2.1.8"
+  },
+  "keywords": ["asp", "cli", "policy"],
+  "license": "MIT"
+}
