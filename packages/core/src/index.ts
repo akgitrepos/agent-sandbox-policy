@@ -1,2 +1,14 @@
-// Placeholder - will be implemented in Phase 2
-export const VERSION = '0.1.0-draft';
+export { CORE_VERSION as VERSION } from './domain/version';
+
+export * from './api/public-api';
+export * from './domain/primitives';
+export * from './domain/version';
+export * from './evaluator';
+export * from './errors';
+export * from './parser';
+export * from './ratelimit';
+export * from './redaction';
+export * from './test-runner';
+export * from './trace';
+export * from './utils';
+export * from './validation';

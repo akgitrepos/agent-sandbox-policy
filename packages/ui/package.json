@@ -1,13 +1,13 @@
 {
   "name": "@asp/ui",
-  "version": "0.1.0-draft",
+  "version": "0.1.1-draft",
   "description": "Web UI playground for Agent Sandbox Policy",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit"
   },

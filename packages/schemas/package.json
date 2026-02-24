@@ -1,6 +1,6 @@
 {
   "name": "@asp/schemas",
-  "version": "0.1.0-draft",
+  "version": "0.1.1-draft",
   "description": "JSON Schemas for Agent Sandbox Policy",
   "type": "module",
   "main": "./dist/index.js",
