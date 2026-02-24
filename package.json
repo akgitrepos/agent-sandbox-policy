@@ -1,0 +1,23 @@
+{
+  "name": "agent-sandbox-policy",
+  "version": "0.1.0-draft",
+  "description": "Agent Sandbox Policy (ASP) - A local-first policy engine for guarding AI agent tool calls",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "keywords": [
+    "agent",
+    "policy",
+    "guardrails",
+    "security",
+    "ai",
+    "llm"
+  ],
+  "author": "",
+  "license": "MIT"
+}
