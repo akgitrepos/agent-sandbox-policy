@@ -1,19 +1,18 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { defineConfig } from 'vitest/config';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
   resolve: {
     alias: {
       '@asp/core': resolve(rootDir, '../core/src/index.ts'),
       '@asp/schemas': resolve(rootDir, '../schemas/src/index.ts'),
     },
   },
-  build: {
-    outDir: 'dist',
+  test: {
+    environment: 'node',
   },
 });
