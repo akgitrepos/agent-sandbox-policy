@@ -1,0 +1,74 @@
+version: 1
+name: "safe-code-agent"
+description: "Starter policy for code-assistant style agents with shell/tool guardrails."
+evaluation:
+  mode: first_match_wins
+
+defaults:
+  decision: deny
+  explain: true
+
+rules:
+  - id: allow-read
+    enabled: true
+    match:
+      stage: request
+      tool_in: ["fs.read", "git.status", "git.diff"]
+    action:
+      decision: allow
+    message: "Read-only tools are allowed."
+    severity: low
+
+  - id: deny-rm-rf
+    enabled: true
+    match:
+      stage: request
+      tool: "shell.exec"
+      args:
+        command:
+          regex_any:
+            - "rm\\s+-rf"
+            - "mkfs"
+            - "dd\\s+if="
+    action:
+      decision: deny
+    message: "Destructive shell commands are blocked."
+    severity: high
+
+  - id: require-approval-shell
+    enabled: true
+    match:
+      stage: request
+      tool: "shell.exec"
+    action:
+      decision: require_approval
+      approval:
+        approver_type: human
+    message: "Shell commands require human approval unless explicitly allowed."
+    severity: medium
+
+rate_limits:
+  - id: web-search-per-run-budget
+    enabled: true
+    match:
+      stage: request
+      tool: "web.search"
+    limit:
+      scope: per_run
+      requests: 1
+      per: "1m"
+    on_exceed:
+      decision: deny
+      message: "web.search budget exceeded for this run."
+
+redaction:
+  - id: redact-api-keys-in-shell-output
+    enabled: true
+    match:
+      stage: output
+      tool_in: ["shell.exec"]
+    apply:
+      mode: text_regex
+      patterns:
+        - regex: "(?i)(api[_-]?key\\s*[:=]\\s*)[A-Za-z0-9_\\-]{8,}"
+          replace: "$1[REDACTED]"

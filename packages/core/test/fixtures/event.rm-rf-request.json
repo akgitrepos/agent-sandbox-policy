@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "event_id": "evt_rm_rf_001",
+  "run_id": "run_demo_001",
+  "agent_id": "code-assistant",
+  "stage": "request",
+  "tool_name": "shell.exec",
+  "arguments": {
+    "command": "rm -rf /tmp/cache"
+  },
+  "context": {
+    "environment": "dev",
+    "cwd": "/repo"
+  },
+  "timestamp": "2026-02-22T19:20:00Z",
+  "meta": {}
+}

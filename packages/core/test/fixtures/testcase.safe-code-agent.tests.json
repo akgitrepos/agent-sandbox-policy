@@ -1,0 +1,25 @@
+{
+  "schema_version": "1",
+  "tests": [
+    {
+      "id": "allow_fs_read",
+      "description": "Read-only file tool should be allowed",
+      "event": {
+        "schema_version": "1",
+        "event_id": "evt_test_allow_001",
+        "run_id": "run_test_001",
+        "stage": "request",
+        "tool_name": "fs.read",
+        "arguments": {
+          "path": "/repo/README.md"
+        },
+        "timestamp": "2026-02-22T00:00:00Z"
+      },
+      "expected": {
+        "status": "allow",
+        "matched_rule_id": "allow-read",
+        "severity": "low"
+      }
+    }
+  ]
+}
