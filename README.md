@@ -38,7 +38,7 @@ Note: ASP currently focuses on policy evaluation and guardrail workflows. Provid
 
 ### UI (Policy Lab)
 
-![ASP UI preview](./docs/assets/ui.png)
+![ASP UI preview](./docs/assets/ui.jpg)
 
 ## Quick Start
 
