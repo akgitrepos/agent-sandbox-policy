@@ -8,9 +8,15 @@ import { runReplay } from './application/commands/replay';
 import { runTest } from './application/commands/test';
 import { runValidate } from './application/commands/validate';
 import { commandFailureOutput } from './application/run-command';
+import {
+  promptInteractiveSelection,
+  promptPaths,
+  type InteractiveCommand,
+} from './io/interactive-shell';
 import { readStructuredFile } from './io/read-structured-file';
 import { writeError } from './presenters/write-error';
 import { writeOutput } from './presenters/write-output';
+import { info, title } from './presenters/theme';
 import type { OutputFormat } from './types';
 
 interface CommonOptions {
@@ -46,6 +52,84 @@ async function emit(
     }
     process.exitCode = failure.exitCode;
   }
+}
+
+async function runInteractiveMode(): Promise<void> {
+  process.stdout.write(`${title('ASP Interactive Mode')}\n`);
+  process.stdout.write(`${info('Tip')}: Use command mode for CI and scripting.\n`);
+
+  let shouldContinue = true;
+
+  while (shouldContinue) {
+    const selection = await promptInteractiveSelection();
+    if (selection.command === 'exit') {
+      shouldContinue = false;
+      continue;
+    }
+
+    const paths = await promptPaths(selection.command);
+    await runInteractiveCommand(selection.command, selection.format, paths);
+  }
+}
+
+async function runInteractiveCommand(
+  command: Exclude<InteractiveCommand, 'exit'>,
+  format: OutputFormat,
+  paths: {
+    policy?: string;
+    event?: string;
+    trace?: string;
+    tests?: string;
+  }
+): Promise<void> {
+  if (command === 'validate') {
+    await emit('validate', format, async () =>
+      runValidate({
+        policy: paths.policy ? await readStructuredFile(paths.policy) : undefined,
+        event: paths.event ? await readStructuredFile(paths.event) : undefined,
+        trace: paths.trace ? await readStructuredFile(paths.trace) : undefined,
+        tests: paths.tests ? await readStructuredFile(paths.tests) : undefined,
+      })
+    );
+    return;
+  }
+
+  if (command === 'eval') {
+    await emit('eval', format, async () =>
+      runEval({
+        policy: await readStructuredFile(paths.policy!),
+        event: await readStructuredFile(paths.event!),
+      })
+    );
+    return;
+  }
+
+  if (command === 'replay') {
+    await emit('replay', format, async () =>
+      runReplay({
+        policy: await readStructuredFile(paths.policy!),
+        trace: await readStructuredFile(paths.trace!),
+      })
+    );
+    return;
+  }
+
+  if (command === 'test') {
+    await emit('test', format, async () =>
+      runTest({
+        policy: await readStructuredFile(paths.policy!),
+        tests: await readStructuredFile(paths.tests!),
+      })
+    );
+    return;
+  }
+
+  await emit('redact', format, async () =>
+    runRedact({
+      policy: await readStructuredFile(paths.policy!),
+      event: await readStructuredFile(paths.event!),
+    })
+  );
 }
 
 const program = new Command();
@@ -138,5 +222,17 @@ addFormatOption(
       );
     })
 );
+
+program
+  .command('interactive')
+  .description('Launch interactive command assistant')
+  .action(async () => {
+    try {
+      await runInteractiveMode();
+    } catch (error: unknown) {
+      writeError(error);
+      process.exitCode = 2;
+    }
+  });
 
 await program.parseAsync(process.argv);
