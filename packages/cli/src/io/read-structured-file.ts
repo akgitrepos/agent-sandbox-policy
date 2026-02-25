@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { load } from 'js-yaml';
 
-import { CliError } from '../application/cli-error';
+import { CliError } from '../application/cli-error.js';
 
 function parseJson(raw: string, filePath: string): unknown {
   try {

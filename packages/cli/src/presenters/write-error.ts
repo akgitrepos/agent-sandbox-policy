@@ -1,5 +1,5 @@
-import { CliError } from '../application/cli-error';
-import { error as errorStyle, title } from './theme';
+import { CliError } from '../application/cli-error.js';
+import { error as errorStyle, title } from './theme.js';
 
 export function writeError(error: unknown): void {
   if (error instanceof CliError) {

@@ -2,22 +2,24 @@
 
 import { Command } from 'commander';
 
-import { runEval } from './application/commands/eval';
-import { runRedact } from './application/commands/redact';
-import { runReplay } from './application/commands/replay';
-import { runTest } from './application/commands/test';
-import { runValidate } from './application/commands/validate';
-import { commandFailureOutput } from './application/run-command';
+import { runEval } from './application/commands/eval.js';
+import { runRedact } from './application/commands/redact.js';
+import { runReplay } from './application/commands/replay.js';
+import { runTest } from './application/commands/test.js';
+import { runValidate } from './application/commands/validate.js';
+import { commandFailureOutput } from './application/run-command.js';
 import {
+  finishInteractiveSpinner,
   promptInteractiveSelection,
   promptPaths,
+  startInteractiveSpinner,
   type InteractiveCommand,
-} from './io/interactive-shell';
-import { readStructuredFile } from './io/read-structured-file';
-import { writeError } from './presenters/write-error';
-import { writeOutput } from './presenters/write-output';
-import { info, title } from './presenters/theme';
-import type { OutputFormat } from './types';
+} from './io/interactive-shell.js';
+import { readStructuredFile } from './io/read-structured-file.js';
+import { writeError } from './presenters/write-error.js';
+import { writeOutput } from './presenters/write-output.js';
+import { info, title } from './presenters/theme.js';
+import type { OutputFormat } from './types.js';
 
 interface CommonOptions {
   format: OutputFormat;
@@ -82,54 +84,66 @@ async function runInteractiveCommand(
     tests?: string;
   }
 ): Promise<void> {
-  if (command === 'validate') {
-    await emit('validate', format, async () =>
-      runValidate({
-        policy: paths.policy ? await readStructuredFile(paths.policy) : undefined,
-        event: paths.event ? await readStructuredFile(paths.event) : undefined,
-        trace: paths.trace ? await readStructuredFile(paths.trace) : undefined,
-        tests: paths.tests ? await readStructuredFile(paths.tests) : undefined,
-      })
-    );
-    return;
-  }
+  const spinner = startInteractiveSpinner(`Running ${command}...`);
 
-  if (command === 'eval') {
-    await emit('eval', format, async () =>
-      runEval({
+  try {
+    if (command === 'validate') {
+      await emit('validate', format, async () =>
+        runValidate({
+          policy: paths.policy ? await readStructuredFile(paths.policy) : undefined,
+          event: paths.event ? await readStructuredFile(paths.event) : undefined,
+          trace: paths.trace ? await readStructuredFile(paths.trace) : undefined,
+          tests: paths.tests ? await readStructuredFile(paths.tests) : undefined,
+        })
+      );
+      finishInteractiveSpinner(spinner, `${command} complete`, false);
+      return;
+    }
+
+    if (command === 'eval') {
+      await emit('eval', format, async () =>
+        runEval({
+          policy: await readStructuredFile(paths.policy!),
+          event: await readStructuredFile(paths.event!),
+        })
+      );
+      finishInteractiveSpinner(spinner, `${command} complete`, false);
+      return;
+    }
+
+    if (command === 'replay') {
+      await emit('replay', format, async () =>
+        runReplay({
+          policy: await readStructuredFile(paths.policy!),
+          trace: await readStructuredFile(paths.trace!),
+        })
+      );
+      finishInteractiveSpinner(spinner, `${command} complete`, false);
+      return;
+    }
+
+    if (command === 'test') {
+      await emit('test', format, async () =>
+        runTest({
+          policy: await readStructuredFile(paths.policy!),
+          tests: await readStructuredFile(paths.tests!),
+        })
+      );
+      finishInteractiveSpinner(spinner, `${command} complete`, false);
+      return;
+    }
+
+    await emit('redact', format, async () =>
+      runRedact({
         policy: await readStructuredFile(paths.policy!),
         event: await readStructuredFile(paths.event!),
       })
     );
-    return;
+    finishInteractiveSpinner(spinner, `${command} complete`, false);
+  } catch (error: unknown) {
+    finishInteractiveSpinner(spinner, `${command} failed`, true);
+    throw error;
   }
-
-  if (command === 'replay') {
-    await emit('replay', format, async () =>
-      runReplay({
-        policy: await readStructuredFile(paths.policy!),
-        trace: await readStructuredFile(paths.trace!),
-      })
-    );
-    return;
-  }
-
-  if (command === 'test') {
-    await emit('test', format, async () =>
-      runTest({
-        policy: await readStructuredFile(paths.policy!),
-        tests: await readStructuredFile(paths.tests!),
-      })
-    );
-    return;
-  }
-
-  await emit('redact', format, async () =>
-    runRedact({
-      policy: await readStructuredFile(paths.policy!),
-      event: await readStructuredFile(paths.event!),
-    })
-  );
 }
 
 const program = new Command();
@@ -138,6 +152,10 @@ program
   .name('asp')
   .description('Agent Sandbox Policy CLI')
   .version('0.1.1-draft');
+
+program.action(async () => {
+  await runInteractiveMode();
+});
 
 addFormatOption(
   program

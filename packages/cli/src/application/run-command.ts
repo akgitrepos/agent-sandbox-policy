@@ -1,8 +1,8 @@
 import { AspError } from '@asp/core';
 
-import { EXIT_CODE } from './exit-codes';
+import { EXIT_CODE } from './exit-codes.js';
 
-import type { CommandExecution } from '../types';
+import type { CommandExecution } from '../types.js';
 
 export async function runCommand<T extends { command: string; ok: boolean }>(
   action: () => Promise<CommandExecution<T>>

@@ -1,9 +1,9 @@
 import { createSchemaValidator, parseAndCompilePolicy } from '@asp/core';
 
-import { CliError } from '../cli-error';
-import { EXIT_CODE } from '../exit-codes';
+import { CliError } from '../cli-error.js';
+import { EXIT_CODE } from '../exit-codes.js';
 
-import type { CommandExecution } from '../../types';
+import type { CommandExecution } from '../../types.js';
 
 export interface ValidateCommandInput {
   readonly policy?: unknown;

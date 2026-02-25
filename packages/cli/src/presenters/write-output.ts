@@ -1,5 +1,5 @@
-import type { OutputFormat } from '../types';
-import { badge, dim, info, ok, title, warn } from './theme';
+import type { OutputFormat } from '../types.js';
+import { badge, dim, info, ok, title, warn } from './theme.js';
 
 export function writeOutput(payload: unknown, format: OutputFormat): void {
   if (format === 'json') {

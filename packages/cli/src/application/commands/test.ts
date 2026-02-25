@@ -1,8 +1,8 @@
 import { parseAndCompilePolicy, runPolicyTests } from '@asp/core';
 
-import { EXIT_CODE } from '../exit-codes';
+import { EXIT_CODE } from '../exit-codes.js';
 
-import type { CommandExecution } from '../../types';
+import type { CommandExecution } from '../../types.js';
 
 export interface TestCommandInput {
   readonly policy: unknown;
