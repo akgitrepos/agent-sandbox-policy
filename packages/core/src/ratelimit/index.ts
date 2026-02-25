@@ -1,49 +1,6 @@
-export interface RateLimitSnapshot {
-  readonly count: number;
-  readonly resetAtMs: number;
-}
-
-export interface RateLimitStore {
-  incrementAndGet(key: string, windowMs: number, nowMs: number): RateLimitSnapshot;
-}
-
-interface CounterEntry {
-  readonly count: number;
-  readonly resetAtMs: number;
-}
-
-export class InMemoryRateLimitStore implements RateLimitStore {
-  private readonly counters = new Map<string, CounterEntry>();
-
-  public incrementAndGet(key: string, windowMs: number, nowMs: number): RateLimitSnapshot {
-    const current = this.counters.get(key);
-
-    if (!current || nowMs >= current.resetAtMs) {
-      const next = {
-        count: 1,
-        resetAtMs: nowMs + windowMs,
-      };
-      this.counters.set(key, next);
-
-      return {
-        count: next.count,
-        resetAtMs: next.resetAtMs,
-      };
-    }
-
-    const next = {
-      count: current.count + 1,
-      resetAtMs: current.resetAtMs,
-    };
-    this.counters.set(key, next);
-
-    return {
-      count: next.count,
-      resetAtMs: next.resetAtMs,
-    };
-  }
-
-  public clear(): void {
-    this.counters.clear();
-  }
-}
+export { parseDurationToMs } from './duration';
+export { evaluateRateLimits } from './evaluate-rate-limits';
+export { buildRateLimitKey } from './key';
+export { InMemoryRateLimitStore } from './store';
+export type { RateLimitEvaluation } from './evaluate-rate-limits';
+export type { RateLimitSnapshot, RateLimitStore } from './store';
