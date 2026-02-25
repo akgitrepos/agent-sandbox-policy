@@ -1,9 +1,2 @@
-export interface ValidationIssue {
-  readonly path: string;
-  readonly message: string;
-}
-
-export interface ValidationResult {
-  readonly valid: boolean;
-  readonly issues: readonly ValidationIssue[];
-}
+export type { ValidationIssue, ValidationResult } from './types';
+export { createSchemaValidator, SchemaValidator } from './validator';
