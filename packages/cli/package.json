@@ -19,6 +19,7 @@
   "dependencies": {
     "@asp/core": "workspace:*",
     "@asp/schemas": "workspace:*",
+    "@clack/prompts": "^0.10.1",
     "commander": "^12.1.0",
     "js-yaml": "^4.1.0"
   },
