@@ -1,6 +1,2 @@
-export interface ReplaySummary {
-  readonly totalEvents: number;
-  readonly allowCount: number;
-  readonly denyCount: number;
-  readonly requireApprovalCount: number;
-}
+export { replayTrace } from './replay-trace';
+export type { ReplayEventResult, ReplayResult, ReplaySummary, RunTrace } from './types';
