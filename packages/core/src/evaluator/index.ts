@@ -1,6 +1,11 @@
-import type { DecisionAction, ExplainDetails } from '../domain/primitives';
-
-export interface EvaluatorDecision {
-  readonly action: DecisionAction;
-  readonly explain: ExplainDetails;
-}
+export { evaluateEvent } from './evaluate-event';
+export { ruleMatchesEvent } from './matcher';
+export type {
+  DecisionReason,
+  EvaluateEventOptions,
+  EvaluatorDecision,
+  EvaluatorExplain,
+  ToolEvent,
+  ToolOutputEvent,
+  ToolRequestEvent,
+} from './types';
