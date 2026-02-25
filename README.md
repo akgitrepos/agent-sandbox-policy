@@ -30,6 +30,16 @@ Note: ASP currently focuses on policy evaluation and guardrail workflows. Provid
 - `packages/ui` - web playground
 - `docs/adr` - architecture decision records
 
+## Product Preview
+
+### CLI (interactive + command workflows)
+
+![ASP CLI preview](./docs/assets/cli.png)
+
+### UI (Policy Lab)
+
+![ASP UI preview](./docs/assets/ui.png)
+
 ## Quick Start
 
 ```bash
