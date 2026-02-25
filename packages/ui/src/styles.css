@@ -122,6 +122,33 @@ body {
   background: linear-gradient(120deg, var(--brand-2), var(--brand));
 }
 
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  border-radius: 999px;
+  padding: 0.25rem 0.62rem;
+  color: var(--ink-1);
+}
+
+.chip em {
+  font-style: normal;
+  font-size: 0.72rem;
+  opacity: 0.78;
+}
+
+.chip strong {
+  font-size: 0.75rem;
+}
+
 .workspace {
   margin-top: 1rem;
   display: grid;
@@ -166,6 +193,14 @@ body {
 
 .action:hover {
   filter: brightness(1.06);
+}
+
+.tab:focus-visible,
+.action:focus-visible,
+.ghost:focus-visible,
+.editor:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 .tool-row {
@@ -236,6 +271,24 @@ body {
 
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg-1);
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .tool-row {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    background: var(--bg-1);
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
   }
 }
 

@@ -15,6 +15,28 @@ interface SummaryCard {
   readonly value: string;
 }
 
+interface PlaygroundMeta {
+  readonly status: string;
+  readonly matchedRule: string;
+  readonly reasons: string;
+}
+
+interface TraceMeta {
+  readonly events: string;
+  readonly denied: string;
+  readonly limited: string;
+}
+
+interface TestsMeta {
+  readonly passed: string;
+  readonly failed: string;
+}
+
+interface RedactionMeta {
+  readonly status: string;
+  readonly mutations: string;
+}
+
 const defaultPolicy = `version: 1
 name: "safe-code-agent"
 evaluation:
@@ -235,6 +257,19 @@ function ResultTools(props: {
   );
 }
 
+function MetaChips(props: { readonly items: readonly SummaryCard[] }): JSX.Element {
+  return (
+    <div className="chip-row" aria-label="Result summary chips">
+      {props.items.map((item) => (
+        <span key={item.label} className="chip">
+          <em>{item.label}</em>
+          <strong>{item.value}</strong>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function App() {
   const validator = useMemo(() => createSchemaValidator(), []);
 
@@ -257,6 +292,24 @@ function App() {
     { label: 'Last Status', value: 'Ready' },
     { label: 'Last Action', value: 'None' },
   ]);
+  const [playgroundMeta, setPlaygroundMeta] = useState<PlaygroundMeta>({
+    status: 'pending',
+    matchedRule: '-',
+    reasons: '0',
+  });
+  const [traceMeta, setTraceMeta] = useState<TraceMeta>({
+    events: '0',
+    denied: '0',
+    limited: '0',
+  });
+  const [testsMeta, setTestsMeta] = useState<TestsMeta>({
+    passed: '0',
+    failed: '0',
+  });
+  const [redactionMeta, setRedactionMeta] = useState<RedactionMeta>({
+    status: 'pending',
+    mutations: '0',
+  });
 
   function setSummary(next: readonly SummaryCard[]): void {
     setSummaryCards(next);
@@ -323,6 +376,11 @@ function App() {
         { label: 'Last Status', value: result.status },
         { label: 'Last Action', value: result.decision.matchedRuleId ?? 'default decision' },
       ]);
+      setPlaygroundMeta({
+        status: result.status,
+        matchedRule: result.decision.matchedRuleId ?? 'default',
+        reasons: String(result.decision.reasons.length),
+      });
     } catch (error: unknown) {
       setPlaygroundResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Evaluation failed.');
@@ -342,6 +400,11 @@ function App() {
         { label: 'Last Status', value: `${result.summary.totalEvents} events` },
         { label: 'Last Action', value: `${result.summary.denyRateLimitedCount} rate-limited` },
       ]);
+      setTraceMeta({
+        events: String(result.summary.totalEvents),
+        denied: String(result.summary.denyCount),
+        limited: String(result.summary.denyRateLimitedCount),
+      });
     } catch (error: unknown) {
       setTraceResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Replay failed.');
@@ -361,6 +424,10 @@ function App() {
         { label: 'Last Status', value: `${report.passed}/${report.total} passed` },
         { label: 'Last Action', value: `${report.failed} failed` },
       ]);
+      setTestsMeta({
+        passed: String(report.passed),
+        failed: String(report.failed),
+      });
     } catch (error: unknown) {
       setTestsResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Test run failed.');
@@ -385,6 +452,10 @@ function App() {
         { label: 'Last Status', value: result.status },
         { label: 'Last Action', value: `${result.redaction.mutations.length} mutations` },
       ]);
+      setRedactionMeta({
+        status: result.status,
+        mutations: String(result.redaction.mutations.length),
+      });
     } catch (error: unknown) {
       setRedactionResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Redaction preview failed.');
@@ -409,23 +480,24 @@ function App() {
       </header>
 
       <nav className="tab-row" aria-label="Policy lab sections">
-        <button className={activeTab === 'playground' ? 'tab active' : 'tab'} onClick={() => setActiveTab('playground')}>Playground</button>
-        <button className={activeTab === 'trace' ? 'tab active' : 'tab'} onClick={() => setActiveTab('trace')}>Trace Replay</button>
-        <button className={activeTab === 'tests' ? 'tab active' : 'tab'} onClick={() => setActiveTab('tests')}>Policy Tests</button>
-        <button className={activeTab === 'redaction' ? 'tab active' : 'tab'} onClick={() => setActiveTab('redaction')}>Redaction Preview</button>
+        <button aria-label="Open playground tab" className={activeTab === 'playground' ? 'tab active' : 'tab'} onClick={() => setActiveTab('playground')}>Playground</button>
+        <button aria-label="Open trace replay tab" className={activeTab === 'trace' ? 'tab active' : 'tab'} onClick={() => setActiveTab('trace')}>Trace Replay</button>
+        <button aria-label="Open policy tests tab" className={activeTab === 'tests' ? 'tab active' : 'tab'} onClick={() => setActiveTab('tests')}>Policy Tests</button>
+        <button aria-label="Open redaction preview tab" className={activeTab === 'redaction' ? 'tab active' : 'tab'} onClick={() => setActiveTab('redaction')}>Redaction Preview</button>
       </nav>
 
       <main className="workspace">
         <section className="panel policy-panel">
           <div className="panel-header">
             <h2>Policy</h2>
-            <button className="action" onClick={handleValidatePolicy}>Validate Policy</button>
+            <button aria-label="Validate policy" className="action" onClick={handleValidatePolicy}>Validate Policy</button>
           </div>
           <textarea
             className="editor"
             value={policyText}
             onChange={(event) => setPolicyText(event.target.value)}
             spellCheck={false}
+            aria-label="Policy editor"
           />
           <EditorTools
             filename="policy.yaml"
@@ -439,13 +511,21 @@ function App() {
           <section className="panel main-panel">
             <div className="panel-header">
               <h2>Event Simulator</h2>
-              <button className="action" onClick={handleEvaluateEvent}>Evaluate Event</button>
+              <button aria-label="Evaluate event" className="action" onClick={handleEvaluateEvent}>Evaluate Event</button>
             </div>
+            <MetaChips
+              items={[
+                { label: 'status', value: playgroundMeta.status },
+                { label: 'matched rule', value: playgroundMeta.matchedRule },
+                { label: 'reasons', value: playgroundMeta.reasons },
+              ]}
+            />
             <textarea
               className="editor"
               value={eventText}
               onChange={(event) => setEventText(event.target.value)}
               spellCheck={false}
+              aria-label="Event editor"
             />
             <EditorTools
               filename="event.json"
@@ -468,13 +548,21 @@ function App() {
           <section className="panel main-panel">
             <div className="panel-header">
               <h2>Trace Replay</h2>
-              <button className="action" onClick={handleReplayTrace}>Replay Trace</button>
+              <button aria-label="Replay trace" className="action" onClick={handleReplayTrace}>Replay Trace</button>
             </div>
+            <MetaChips
+              items={[
+                { label: 'events', value: traceMeta.events },
+                { label: 'denied', value: traceMeta.denied },
+                { label: 'rate-limited', value: traceMeta.limited },
+              ]}
+            />
             <textarea
               className="editor"
               value={traceText}
               onChange={(event) => setTraceText(event.target.value)}
               spellCheck={false}
+              aria-label="Trace editor"
             />
             <EditorTools
               filename="trace.json"
@@ -497,13 +585,20 @@ function App() {
           <section className="panel main-panel">
             <div className="panel-header">
               <h2>Policy Tests</h2>
-              <button className="action" onClick={handleRunTests}>Run Tests</button>
+              <button aria-label="Run policy tests" className="action" onClick={handleRunTests}>Run Tests</button>
             </div>
+            <MetaChips
+              items={[
+                { label: 'passed', value: testsMeta.passed },
+                { label: 'failed', value: testsMeta.failed },
+              ]}
+            />
             <textarea
               className="editor"
               value={testsText}
               onChange={(event) => setTestsText(event.target.value)}
               spellCheck={false}
+              aria-label="Tests editor"
             />
             <EditorTools
               filename="tests.json"
@@ -526,13 +621,20 @@ function App() {
           <section className="panel main-panel">
             <div className="panel-header">
               <h2>Redaction Preview</h2>
-              <button className="action" onClick={handlePreviewRedaction}>Preview Redaction</button>
+              <button aria-label="Preview redaction" className="action" onClick={handlePreviewRedaction}>Preview Redaction</button>
             </div>
+            <MetaChips
+              items={[
+                { label: 'status', value: redactionMeta.status },
+                { label: 'mutations', value: redactionMeta.mutations },
+              ]}
+            />
             <textarea
               className="editor"
               value={outputEventText}
               onChange={(event) => setOutputEventText(event.target.value)}
               spellCheck={false}
+              aria-label="Output event editor"
             />
             <EditorTools
               filename="output-event.json"
