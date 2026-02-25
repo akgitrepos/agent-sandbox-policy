@@ -120,8 +120,7 @@ function matchArgsClause(
   );
 }
 
-export function ruleMatchesEvent(rule: CompiledRule, event: ToolEvent): boolean {
-  const match = rule.match;
+export function matchClauseAgainstEvent(match: CompiledMatchClause, event: ToolEvent): boolean {
 
   if (match.stage && match.stage !== event.stage) {
     return false;
@@ -144,4 +143,8 @@ export function ruleMatchesEvent(rule: CompiledRule, event: ToolEvent): boolean 
   }
 
   return true;
+}
+
+export function ruleMatchesEvent(rule: CompiledRule, event: ToolEvent): boolean {
+  return matchClauseAgainstEvent(rule.match, event);
 }
