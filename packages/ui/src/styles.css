@@ -7,9 +7,11 @@
   --ink-1: #2f4262;
   --line: #ccd8ef;
   --brand: #1f8fff;
-  --brand-2: #0b5ec5;
+  --brand-2: #153761;
   --ok: #168c3b;
   --shadow: 0 24px 40px rgba(20, 42, 89, 0.11);
+  --editor-height: 520px;
+  --result-height: 220px;
 }
 
 * {
@@ -20,10 +22,7 @@ body {
   margin: 0;
   font-family: "IBM Plex Sans", "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
   color: var(--ink-0);
-  background:
-    radial-gradient(1200px 420px at 10% -10%, rgba(31, 143, 255, 0.18), transparent 60%),
-    radial-gradient(900px 380px at 90% -20%, rgba(11, 94, 197, 0.14), transparent 60%),
-    var(--bg-0);
+  background: var(--bg-0);
 }
 
 .app-shell {
@@ -34,7 +33,7 @@ body {
 }
 
 .hero {
-  background: linear-gradient(120deg, #0f2d5d, #18447d 62%, #1f8fff);
+  background: #153761;
   color: #ecf4ff;
   border-radius: 16px;
   padding: 1.5rem;
@@ -62,48 +61,37 @@ body {
 }
 
 .status-pill {
-  margin-top: 0.8rem;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  color: var(--ink-1);
   border-radius: 999px;
   padding: 0.3rem 0.8rem;
   font-size: 0.84rem;
 }
 
-.summary-grid {
-  margin-top: 0.9rem;
-  display: grid;
+.top-controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
   gap: 0.55rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.summary-card {
-  padding: 0.55rem 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.summary-card p {
-  margin: 0;
-  font-size: 0.72rem;
-  opacity: 0.78;
-}
-
-.summary-card strong {
-  display: block;
-  margin-top: 0.22rem;
-  font-size: 0.9rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .tab-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 1rem;
 }
 
 .tab {
@@ -119,7 +107,7 @@ body {
 .tab.active {
   color: #fff;
   border-color: var(--brand-2);
-  background: linear-gradient(120deg, var(--brand-2), var(--brand));
+  background: var(--brand-2);
 }
 
 .chip-row {
@@ -154,6 +142,7 @@ body {
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr 1.35fr;
+  align-items: start;
 }
 
 .panel {
@@ -182,7 +171,7 @@ body {
 
 .action {
   border: 1px solid transparent;
-  background: linear-gradient(120deg, var(--brand-2), var(--brand));
+  background: var(--brand-2);
   color: #fff;
   border-radius: 10px;
   padding: 0.45rem 0.75rem;
@@ -247,6 +236,19 @@ body {
   line-height: 1.45;
 }
 
+.main-panel .editor,
+.policy-panel .editor {
+  min-height: var(--editor-height);
+}
+
+.main-panel .result {
+  min-height: var(--result-height);
+}
+
+.policy-panel .editor {
+  min-height: calc(var(--editor-height) + var(--result-height) + 72px);
+}
+
 .editor {
   resize: vertical;
 }
@@ -256,21 +258,23 @@ body {
   margin: 0;
 }
 
-.policy-panel .editor {
-  min-height: 700px;
-}
-
 @media (max-width: 1080px) {
   .workspace {
     grid-template-columns: 1fr;
   }
 
-  .policy-panel .editor {
-    min-height: 460px;
+  :root {
+    --editor-height: 420px;
+    --result-height: 180px;
   }
 
-  .summary-grid {
-    grid-template-columns: 1fr;
+  .top-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .top-actions {
+    justify-content: space-between;
   }
 
   .panel-header {

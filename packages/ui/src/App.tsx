@@ -10,11 +10,6 @@ import {
 
 type TabId = 'playground' | 'trace' | 'tests' | 'redaction';
 
-interface SummaryCard {
-  readonly label: string;
-  readonly value: string;
-}
-
 interface PlaygroundMeta {
   readonly status: string;
   readonly matchedRule: string;
@@ -58,7 +53,7 @@ rules:
       tool: shell.exec
       args:
         command:
-          regex_any: ["rm\\s+-rf"]
+          regex_any: ['rm\\s+-rf']
     action:
       decision: deny
     message: "Destructive shell commands are blocked."
@@ -83,8 +78,8 @@ redaction:
     apply:
       mode: text_regex
       patterns:
-        - regex: "(?i)(api[_-]?key\\s*[:=]\\s*)[A-Za-z0-9_\\-]{8,}"
-          replace: "$1[REDACTED]"
+        - regex: '(?i)(api[_-]?key\\s*[:=]\\s*)[A-Za-z0-9_\\-]{8,}'
+          replace: '$1[REDACTED]'
 `;
 
 const defaultEvent = `{
@@ -257,7 +252,7 @@ function ResultTools(props: {
   );
 }
 
-function MetaChips(props: { readonly items: readonly SummaryCard[] }): JSX.Element {
+function MetaChips(props: { readonly items: readonly { label: string; value: string }[] }): JSX.Element {
   return (
     <div className="chip-row" aria-label="Result summary chips">
       {props.items.map((item) => (
@@ -287,11 +282,6 @@ function App() {
   const [testsResult, setTestsResult] = useState<string>('Run tests to view pass/fail report.');
   const [redactionResult, setRedactionResult] = useState<string>('Preview redaction to inspect applied mutations.');
   const [statusMessage, setStatusMessage] = useState<string>('Ready');
-  const [summaryCards, setSummaryCards] = useState<readonly SummaryCard[]>([
-    { label: 'Active Tab', value: 'Playground' },
-    { label: 'Last Status', value: 'Ready' },
-    { label: 'Last Action', value: 'None' },
-  ]);
   const [playgroundMeta, setPlaygroundMeta] = useState<PlaygroundMeta>({
     status: 'pending',
     matchedRule: '-',
@@ -311,8 +301,23 @@ function App() {
     mutations: '0',
   });
 
-  function setSummary(next: readonly SummaryCard[]): void {
-    setSummaryCards(next);
+  function resetAllDrafts(): void {
+    setPolicyText(defaultPolicy);
+    setEventText(defaultEvent);
+    setTraceText(defaultTrace);
+    setTestsText(defaultTests);
+    setOutputEventText(defaultOutputEvent);
+    setPlaygroundResult('Run evaluation to inspect a decision.');
+    setTraceResult('Run replay to inspect timeline and summary.');
+    setTestsResult('Run tests to view pass/fail report.');
+    setRedactionResult('Preview redaction to inspect applied mutations.');
+    setStatusMessage('Drafts reset to defaults.');
+
+    window.localStorage.removeItem(STORAGE_KEYS.policy);
+    window.localStorage.removeItem(STORAGE_KEYS.event);
+    window.localStorage.removeItem(STORAGE_KEYS.trace);
+    window.localStorage.removeItem(STORAGE_KEYS.tests);
+    window.localStorage.removeItem(STORAGE_KEYS.outputEvent);
   }
 
   useEffect(() => {
@@ -335,6 +340,58 @@ function App() {
     window.localStorage.setItem(STORAGE_KEYS.outputEvent, outputEventText);
   }, [outputEventText]);
 
+  useEffect(() => {
+    const recovered: string[] = [];
+
+    try {
+      parseAndCompilePolicy(policyText);
+    } catch {
+      setPolicyText(defaultPolicy);
+      window.localStorage.setItem(STORAGE_KEYS.policy, defaultPolicy);
+      recovered.push('policy');
+    }
+
+    try {
+      const parsed = parseJsonText(eventText);
+      validator.assertEvent(parsed);
+    } catch {
+      setEventText(defaultEvent);
+      window.localStorage.setItem(STORAGE_KEYS.event, defaultEvent);
+      recovered.push('event');
+    }
+
+    try {
+      const parsed = parseJsonText(traceText);
+      validator.assertTrace(parsed);
+    } catch {
+      setTraceText(defaultTrace);
+      window.localStorage.setItem(STORAGE_KEYS.trace, defaultTrace);
+      recovered.push('trace');
+    }
+
+    try {
+      const parsed = parseJsonText(testsText);
+      validator.assertTestcase(parsed);
+    } catch {
+      setTestsText(defaultTests);
+      window.localStorage.setItem(STORAGE_KEYS.tests, defaultTests);
+      recovered.push('tests');
+    }
+
+    try {
+      const parsed = parseJsonText(outputEventText);
+      validator.assertEvent(parsed);
+    } catch {
+      setOutputEventText(defaultOutputEvent);
+      window.localStorage.setItem(STORAGE_KEYS.outputEvent, defaultOutputEvent);
+      recovered.push('output event');
+    }
+
+    if (recovered.length > 0) {
+      setStatusMessage(`Recovered invalid saved drafts: ${recovered.join(', ')}.`);
+    }
+  }, []);
+
   async function handleCopyResult(value: string): Promise<void> {
     try {
       await copyText(value);
@@ -348,18 +405,8 @@ function App() {
     try {
       parseAndCompilePolicy(policyText);
       setStatusMessage('Policy is valid and compiled successfully.');
-      setSummary([
-        { label: 'Active Tab', value: activeTab },
-        { label: 'Last Status', value: 'Policy Valid' },
-        { label: 'Last Action', value: 'validate policy' },
-      ]);
     } catch (error: unknown) {
       setStatusMessage(`Validation failed: ${error instanceof Error ? error.message : String(error)}`);
-      setSummary([
-        { label: 'Active Tab', value: activeTab },
-        { label: 'Last Status', value: 'Policy Invalid' },
-        { label: 'Last Action', value: 'validate policy' },
-      ]);
     }
   }
 
@@ -371,11 +418,6 @@ function App() {
       const result = evaluateEventResult(policy, event);
       setPlaygroundResult(stringify(result));
       setStatusMessage(`Decision computed: ${result.status}`);
-      setSummary([
-        { label: 'Active Tab', value: 'playground' },
-        { label: 'Last Status', value: result.status },
-        { label: 'Last Action', value: result.decision.matchedRuleId ?? 'default decision' },
-      ]);
       setPlaygroundMeta({
         status: result.status,
         matchedRule: result.decision.matchedRuleId ?? 'default',
@@ -383,7 +425,7 @@ function App() {
       });
     } catch (error: unknown) {
       setPlaygroundResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
-      setStatusMessage('Evaluation failed.');
+      setStatusMessage(`Evaluation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -395,11 +437,6 @@ function App() {
       const result = replayTrace(policy, trace);
       setTraceResult(stringify(result));
       setStatusMessage(`Replay complete: ${result.summary.totalEvents} events.`);
-      setSummary([
-        { label: 'Active Tab', value: 'trace' },
-        { label: 'Last Status', value: `${result.summary.totalEvents} events` },
-        { label: 'Last Action', value: `${result.summary.denyRateLimitedCount} rate-limited` },
-      ]);
       setTraceMeta({
         events: String(result.summary.totalEvents),
         denied: String(result.summary.denyCount),
@@ -407,7 +444,7 @@ function App() {
       });
     } catch (error: unknown) {
       setTraceResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
-      setStatusMessage('Replay failed.');
+      setStatusMessage(`Replay failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -419,18 +456,13 @@ function App() {
       const report = runPolicyTests(policy, suite);
       setTestsResult(stringify(report));
       setStatusMessage(`Tests complete: ${report.passed}/${report.total} passed.`);
-      setSummary([
-        { label: 'Active Tab', value: 'tests' },
-        { label: 'Last Status', value: `${report.passed}/${report.total} passed` },
-        { label: 'Last Action', value: `${report.failed} failed` },
-      ]);
       setTestsMeta({
         passed: String(report.passed),
         failed: String(report.failed),
       });
     } catch (error: unknown) {
       setTestsResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
-      setStatusMessage('Test run failed.');
+      setStatusMessage(`Test run failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -447,18 +479,13 @@ function App() {
       };
       setRedactionResult(stringify(payload));
       setStatusMessage(`Redaction preview complete: ${result.redaction.mutations.length} mutations.`);
-      setSummary([
-        { label: 'Active Tab', value: 'redaction' },
-        { label: 'Last Status', value: result.status },
-        { label: 'Last Action', value: `${result.redaction.mutations.length} mutations` },
-      ]);
       setRedactionMeta({
         status: result.status,
         mutations: String(result.redaction.mutations.length),
       });
     } catch (error: unknown) {
       setRedactionResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
-      setStatusMessage('Redaction preview failed.');
+      setStatusMessage(`Redaction preview failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -468,23 +495,20 @@ function App() {
         <p className="eyebrow">Agent Sandbox Policy</p>
         <h1>Policy Lab</h1>
         <p className="subtitle">Author, evaluate, replay, test, and inspect policy behavior in one deterministic workspace.</p>
-        <div className="status-pill">{statusMessage}</div>
-        <div className="summary-grid">
-          {summaryCards.map((card) => (
-            <article key={card.label} className="summary-card">
-              <p>{card.label}</p>
-              <strong>{card.value}</strong>
-            </article>
-          ))}
-        </div>
       </header>
 
-      <nav className="tab-row" aria-label="Policy lab sections">
-        <button aria-label="Open playground tab" className={activeTab === 'playground' ? 'tab active' : 'tab'} onClick={() => setActiveTab('playground')}>Playground</button>
-        <button aria-label="Open trace replay tab" className={activeTab === 'trace' ? 'tab active' : 'tab'} onClick={() => setActiveTab('trace')}>Trace Replay</button>
-        <button aria-label="Open policy tests tab" className={activeTab === 'tests' ? 'tab active' : 'tab'} onClick={() => setActiveTab('tests')}>Policy Tests</button>
-        <button aria-label="Open redaction preview tab" className={activeTab === 'redaction' ? 'tab active' : 'tab'} onClick={() => setActiveTab('redaction')}>Redaction Preview</button>
-      </nav>
+      <div className="top-controls">
+        <nav className="tab-row" aria-label="Policy lab sections">
+          <button aria-label="Open playground tab" className={activeTab === 'playground' ? 'tab active' : 'tab'} onClick={() => setActiveTab('playground')}>Playground</button>
+          <button aria-label="Open trace replay tab" className={activeTab === 'trace' ? 'tab active' : 'tab'} onClick={() => setActiveTab('trace')}>Trace Replay</button>
+          <button aria-label="Open policy tests tab" className={activeTab === 'tests' ? 'tab active' : 'tab'} onClick={() => setActiveTab('tests')}>Policy Tests</button>
+          <button aria-label="Open redaction preview tab" className={activeTab === 'redaction' ? 'tab active' : 'tab'} onClick={() => setActiveTab('redaction')}>Redaction Preview</button>
+        </nav>
+        <div className="top-actions">
+          <div className="status-pill">{statusMessage}</div>
+          <button className="ghost" onClick={resetAllDrafts}>Reset All Drafts</button>
+        </div>
+      </div>
 
       <main className="workspace">
         <section className="panel policy-panel">
