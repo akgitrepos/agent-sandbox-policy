@@ -3,7 +3,11 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@asp/schemas": ["../schemas/src/index.ts"]
+    }
   },
   "include": ["src"],
   "references": [

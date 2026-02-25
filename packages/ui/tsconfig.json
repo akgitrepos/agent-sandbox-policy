@@ -5,7 +5,12 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@asp/core": ["../core/src/index.ts"],
+      "@asp/schemas": ["../schemas/src/index.ts"]
+    }
   },
   "include": ["src"],
   "references": [

@@ -4,7 +4,12 @@
     "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@asp/core": ["../core/src/index.ts"],
+      "@asp/schemas": ["../schemas/src/index.ts"]
+    }
   },
   "include": ["src"],
   "references": [
