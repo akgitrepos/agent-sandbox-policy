@@ -1,6 +1,23 @@
-export type PolicyFormat = 'json' | 'yaml';
-
-export interface PolicySource {
-  readonly raw: string;
-  readonly format: PolicyFormat;
-}
+export { compilePolicy } from './compiler';
+export { parseAndCompilePolicy, parsePolicy } from './parse-policy';
+export type {
+  CompiledMatchClause,
+  CompiledMatchValue,
+  CompiledOperatorConstraint,
+  CompiledPolicy,
+  CompiledRateLimitRule,
+  CompiledRedactionApply,
+  CompiledRedactionRule,
+  CompiledRule,
+  EvaluationMode,
+  MatchClause,
+  MatchValue,
+  OperatorConstraint,
+  PolicyDocument,
+  PolicyFormat,
+  RateLimitRule,
+  RedactionRule,
+  Rule,
+  Scalar,
+  Severity,
+} from './types';
