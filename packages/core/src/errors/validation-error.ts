@@ -14,3 +14,17 @@ export class EventValidationError extends AspError {
     this.name = 'EventValidationError';
   }
 }
+
+export class TraceValidationError extends AspError {
+  public constructor(message: string, details?: Record<string, unknown>) {
+    super(ASP_ERROR_CODES.TRACE_VALIDATION_ERROR, message, { details });
+    this.name = 'TraceValidationError';
+  }
+}
+
+export class TestcaseValidationError extends AspError {
+  public constructor(message: string, details?: Record<string, unknown>) {
+    super(ASP_ERROR_CODES.TESTCASE_VALIDATION_ERROR, message, { details });
+    this.name = 'TestcaseValidationError';
+  }
+}

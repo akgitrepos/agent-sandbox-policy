@@ -7,7 +7,12 @@ import {
   type SchemaName,
 } from '@asp/schemas';
 
-import { EventValidationError, PolicyValidationError } from '../errors';
+import {
+  EventValidationError,
+  PolicyValidationError,
+  TestcaseValidationError,
+  TraceValidationError,
+} from '../errors';
 
 import type { ValidationIssue, ValidationResult } from './types';
 
@@ -76,6 +81,26 @@ export class SchemaValidator {
 
     if (!result.valid) {
       throw new EventValidationError('Event validation failed.', {
+        issues: result.issues,
+      });
+    }
+  }
+
+  public assertTrace(candidate: unknown): void {
+    const result = this.validate('trace', candidate);
+
+    if (!result.valid) {
+      throw new TraceValidationError('Trace validation failed.', {
+        issues: result.issues,
+      });
+    }
+  }
+
+  public assertTestcase(candidate: unknown): void {
+    const result = this.validate('testcase', candidate);
+
+    if (!result.valid) {
+      throw new TestcaseValidationError('Testcase validation failed.', {
         issues: result.issues,
       });
     }

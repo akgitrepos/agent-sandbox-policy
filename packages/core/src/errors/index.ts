@@ -4,4 +4,6 @@ export * from './evaluation-error';
 export * from './invariant-error';
 export * from './parse-error';
 export * from './policy-compilation-error';
+export * from './replay-error';
+export * from './test-runner-error';
 export * from './validation-error';
