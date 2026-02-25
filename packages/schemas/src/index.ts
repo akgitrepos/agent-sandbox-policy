@@ -1,2 +1,10 @@
-// Placeholder - will be implemented in Phase 2
-export const SCHEMA_VERSION = '1';
+export { schemaCatalog, getSchema } from './catalog';
+export { decisionSchema } from './decision.schema';
+export { eventSchema } from './event.schema';
+export { schemaManifest } from './manifest';
+export { policySchema } from './policy.schema';
+export { SCHEMA_IDS } from './schema-ids';
+export { testcaseSchema } from './testcase.schema';
+export { traceSchema } from './trace.schema';
+export { SCHEMA_NAMES, SCHEMA_VERSION } from './types';
+export type { JsonSchema, SchemaEntry, SchemaManifest, SchemaName } from './types';
