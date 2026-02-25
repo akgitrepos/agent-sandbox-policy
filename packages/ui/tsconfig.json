@@ -1,9 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "baseUrl": ".",
@@ -12,9 +10,5 @@
       "@asp/schemas": ["../schemas/src/index.ts"]
     }
   },
-  "include": ["src"],
-  "references": [
-    { "path": "../core" },
-    { "path": "../schemas" }
-  ]
+  "include": ["src"]
 }

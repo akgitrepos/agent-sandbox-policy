@@ -1,9 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
@@ -11,9 +9,5 @@
       "@asp/schemas": ["../schemas/src/index.ts"]
     }
   },
-  "include": ["src"],
-  "references": [
-    { "path": "../core" },
-    { "path": "../schemas" }
-  ]
+  "include": ["src"]
 }
