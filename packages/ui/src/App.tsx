@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   createSchemaValidator,
@@ -9,6 +9,11 @@ import {
 } from '@asp/core';
 
 type TabId = 'playground' | 'trace' | 'tests' | 'redaction';
+
+interface SummaryCard {
+  readonly label: string;
+  readonly value: string;
+}
 
 const defaultPolicy = `version: 1
 name: "safe-code-agent"
@@ -132,32 +137,176 @@ const defaultOutputEvent = `{
   "timestamp": "2026-02-22T00:00:20Z"
 }`;
 
+const STORAGE_KEYS = {
+  policy: 'asp.ui.policy',
+  event: 'asp.ui.event',
+  trace: 'asp.ui.trace',
+  tests: 'asp.ui.tests',
+  outputEvent: 'asp.ui.outputEvent',
+} as const;
+
 function parseJsonText(text: string): unknown {
   return JSON.parse(text) as unknown;
+}
+
+function stringify(value: unknown): string {
+  return JSON.stringify(value, null, 2);
+}
+
+function readPersistedText(key: string, fallback: string): string {
+  if (typeof window === 'undefined') {
+    return fallback;
+  }
+
+  const stored = window.localStorage.getItem(key);
+  return stored ?? fallback;
+}
+
+function downloadText(filename: string, text: string): void {
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const area = document.createElement('textarea');
+  area.value = text;
+  document.body.appendChild(area);
+  area.select();
+  document.execCommand('copy');
+  area.remove();
+}
+
+function EditorTools(props: {
+  readonly filename: string;
+  readonly value: string;
+  readonly onImport: (next: string) => void;
+  readonly onReset: () => void;
+}): JSX.Element {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  async function importFile(file: File | undefined): Promise<void> {
+    if (!file) {
+      return;
+    }
+
+    const text = await file.text();
+    props.onImport(text);
+  }
+
+  return (
+    <div className="tool-row">
+      <button className="ghost" onClick={() => inputRef.current?.click()}>Import</button>
+      <button className="ghost" onClick={() => downloadText(props.filename, props.value)}>Export</button>
+      <button className="ghost" onClick={props.onReset}>Reset</button>
+      <input
+        ref={inputRef}
+        className="file-input"
+        type="file"
+        accept=".json,.yaml,.yml"
+        onChange={async (event) => {
+          await importFile(event.target.files?.[0]);
+          event.currentTarget.value = '';
+        }}
+      />
+    </div>
+  );
+}
+
+function ResultTools(props: {
+  readonly filename: string;
+  readonly value: string;
+  readonly onCopy: () => void;
+}): JSX.Element {
+  return (
+    <div className="tool-row tool-row-result">
+      <button className="ghost" onClick={props.onCopy}>Copy Result</button>
+      <button className="ghost" onClick={() => downloadText(props.filename, props.value)}>Export Result</button>
+    </div>
+  );
 }
 
 function App() {
   const validator = useMemo(() => createSchemaValidator(), []);
 
   const [activeTab, setActiveTab] = useState<TabId>('playground');
-  const [policyText, setPolicyText] = useState(defaultPolicy);
-  const [eventText, setEventText] = useState(defaultEvent);
-  const [traceText, setTraceText] = useState(defaultTrace);
-  const [testsText, setTestsText] = useState(defaultTests);
-  const [outputEventText, setOutputEventText] = useState(defaultOutputEvent);
+  const [policyText, setPolicyText] = useState(() => readPersistedText(STORAGE_KEYS.policy, defaultPolicy));
+  const [eventText, setEventText] = useState(() => readPersistedText(STORAGE_KEYS.event, defaultEvent));
+  const [traceText, setTraceText] = useState(() => readPersistedText(STORAGE_KEYS.trace, defaultTrace));
+  const [testsText, setTestsText] = useState(() => readPersistedText(STORAGE_KEYS.tests, defaultTests));
+  const [outputEventText, setOutputEventText] = useState(() =>
+    readPersistedText(STORAGE_KEYS.outputEvent, defaultOutputEvent)
+  );
 
   const [playgroundResult, setPlaygroundResult] = useState<string>('Run evaluation to inspect a decision.');
   const [traceResult, setTraceResult] = useState<string>('Run replay to inspect timeline and summary.');
   const [testsResult, setTestsResult] = useState<string>('Run tests to view pass/fail report.');
   const [redactionResult, setRedactionResult] = useState<string>('Preview redaction to inspect applied mutations.');
   const [statusMessage, setStatusMessage] = useState<string>('Ready');
+  const [summaryCards, setSummaryCards] = useState<readonly SummaryCard[]>([
+    { label: 'Active Tab', value: 'Playground' },
+    { label: 'Last Status', value: 'Ready' },
+    { label: 'Last Action', value: 'None' },
+  ]);
+
+  function setSummary(next: readonly SummaryCard[]): void {
+    setSummaryCards(next);
+  }
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.policy, policyText);
+  }, [policyText]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.event, eventText);
+  }, [eventText]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.trace, traceText);
+  }, [traceText]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.tests, testsText);
+  }, [testsText]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.outputEvent, outputEventText);
+  }, [outputEventText]);
+
+  async function handleCopyResult(value: string): Promise<void> {
+    try {
+      await copyText(value);
+      setStatusMessage('Result copied to clipboard.');
+    } catch (error: unknown) {
+      setStatusMessage(`Copy failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 
   function handleValidatePolicy(): void {
     try {
       parseAndCompilePolicy(policyText);
       setStatusMessage('Policy is valid and compiled successfully.');
+      setSummary([
+        { label: 'Active Tab', value: activeTab },
+        { label: 'Last Status', value: 'Policy Valid' },
+        { label: 'Last Action', value: 'validate policy' },
+      ]);
     } catch (error: unknown) {
       setStatusMessage(`Validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      setSummary([
+        { label: 'Active Tab', value: activeTab },
+        { label: 'Last Status', value: 'Policy Invalid' },
+        { label: 'Last Action', value: 'validate policy' },
+      ]);
     }
   }
 
@@ -167,8 +316,13 @@ function App() {
       const event = parseJsonText(eventText);
       validator.assertEvent(event);
       const result = evaluateEventResult(policy, event);
-      setPlaygroundResult(JSON.stringify(result, null, 2));
+      setPlaygroundResult(stringify(result));
       setStatusMessage(`Decision computed: ${result.status}`);
+      setSummary([
+        { label: 'Active Tab', value: 'playground' },
+        { label: 'Last Status', value: result.status },
+        { label: 'Last Action', value: result.decision.matchedRuleId ?? 'default decision' },
+      ]);
     } catch (error: unknown) {
       setPlaygroundResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Evaluation failed.');
@@ -181,8 +335,13 @@ function App() {
       const trace = parseJsonText(traceText);
       validator.assertTrace(trace);
       const result = replayTrace(policy, trace);
-      setTraceResult(JSON.stringify(result, null, 2));
+      setTraceResult(stringify(result));
       setStatusMessage(`Replay complete: ${result.summary.totalEvents} events.`);
+      setSummary([
+        { label: 'Active Tab', value: 'trace' },
+        { label: 'Last Status', value: `${result.summary.totalEvents} events` },
+        { label: 'Last Action', value: `${result.summary.denyRateLimitedCount} rate-limited` },
+      ]);
     } catch (error: unknown) {
       setTraceResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Replay failed.');
@@ -195,8 +354,13 @@ function App() {
       const suite = parseJsonText(testsText);
       validator.assertTestcase(suite);
       const report = runPolicyTests(policy, suite);
-      setTestsResult(JSON.stringify(report, null, 2));
+      setTestsResult(stringify(report));
       setStatusMessage(`Tests complete: ${report.passed}/${report.total} passed.`);
+      setSummary([
+        { label: 'Active Tab', value: 'tests' },
+        { label: 'Last Status', value: `${report.passed}/${report.total} passed` },
+        { label: 'Last Action', value: `${report.failed} failed` },
+      ]);
     } catch (error: unknown) {
       setTestsResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Test run failed.');
@@ -214,8 +378,13 @@ function App() {
         redaction: result.redaction,
         redactedOutput: result.redactedOutput,
       };
-      setRedactionResult(JSON.stringify(payload, null, 2));
+      setRedactionResult(stringify(payload));
       setStatusMessage(`Redaction preview complete: ${result.redaction.mutations.length} mutations.`);
+      setSummary([
+        { label: 'Active Tab', value: 'redaction' },
+        { label: 'Last Status', value: result.status },
+        { label: 'Last Action', value: `${result.redaction.mutations.length} mutations` },
+      ]);
     } catch (error: unknown) {
       setRedactionResult(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setStatusMessage('Redaction preview failed.');
@@ -229,6 +398,14 @@ function App() {
         <h1>Policy Lab</h1>
         <p className="subtitle">Author, evaluate, replay, test, and inspect policy behavior in one deterministic workspace.</p>
         <div className="status-pill">{statusMessage}</div>
+        <div className="summary-grid">
+          {summaryCards.map((card) => (
+            <article key={card.label} className="summary-card">
+              <p>{card.label}</p>
+              <strong>{card.value}</strong>
+            </article>
+          ))}
+        </div>
       </header>
 
       <nav className="tab-row" aria-label="Policy lab sections">
@@ -250,6 +427,12 @@ function App() {
             onChange={(event) => setPolicyText(event.target.value)}
             spellCheck={false}
           />
+          <EditorTools
+            filename="policy.yaml"
+            value={policyText}
+            onImport={setPolicyText}
+            onReset={() => setPolicyText(defaultPolicy)}
+          />
         </section>
 
         {activeTab === 'playground' && (
@@ -263,6 +446,19 @@ function App() {
               value={eventText}
               onChange={(event) => setEventText(event.target.value)}
               spellCheck={false}
+            />
+            <EditorTools
+              filename="event.json"
+              value={eventText}
+              onImport={setEventText}
+              onReset={() => setEventText(defaultEvent)}
+            />
+            <ResultTools
+              filename="decision-result.json"
+              value={playgroundResult}
+              onCopy={() => {
+                void handleCopyResult(playgroundResult);
+              }}
             />
             <pre className="result">{playgroundResult}</pre>
           </section>
@@ -280,6 +476,19 @@ function App() {
               onChange={(event) => setTraceText(event.target.value)}
               spellCheck={false}
             />
+            <EditorTools
+              filename="trace.json"
+              value={traceText}
+              onImport={setTraceText}
+              onReset={() => setTraceText(defaultTrace)}
+            />
+            <ResultTools
+              filename="replay-result.json"
+              value={traceResult}
+              onCopy={() => {
+                void handleCopyResult(traceResult);
+              }}
+            />
             <pre className="result">{traceResult}</pre>
           </section>
         )}
@@ -296,6 +505,19 @@ function App() {
               onChange={(event) => setTestsText(event.target.value)}
               spellCheck={false}
             />
+            <EditorTools
+              filename="tests.json"
+              value={testsText}
+              onImport={setTestsText}
+              onReset={() => setTestsText(defaultTests)}
+            />
+            <ResultTools
+              filename="test-report.json"
+              value={testsResult}
+              onCopy={() => {
+                void handleCopyResult(testsResult);
+              }}
+            />
             <pre className="result">{testsResult}</pre>
           </section>
         )}
@@ -311,6 +533,19 @@ function App() {
               value={outputEventText}
               onChange={(event) => setOutputEventText(event.target.value)}
               spellCheck={false}
+            />
+            <EditorTools
+              filename="output-event.json"
+              value={outputEventText}
+              onImport={setOutputEventText}
+              onReset={() => setOutputEventText(defaultOutputEvent)}
+            />
+            <ResultTools
+              filename="redaction-result.json"
+              value={redactionResult}
+              onCopy={() => {
+                void handleCopyResult(redactionResult);
+              }}
             />
             <pre className="result">{redactionResult}</pre>
           </section>

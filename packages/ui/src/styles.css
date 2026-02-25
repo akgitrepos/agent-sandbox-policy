@@ -73,6 +73,32 @@ body {
   font-size: 0.84rem;
 }
 
+.summary-grid {
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-card {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.summary-card p {
+  margin: 0;
+  font-size: 0.72rem;
+  opacity: 0.78;
+}
+
+.summary-card strong {
+  display: block;
+  margin-top: 0.22rem;
+  font-size: 0.9rem;
+}
+
 .tab-row {
   display: flex;
   flex-wrap: wrap;
@@ -142,6 +168,36 @@ body {
   filter: brightness(1.06);
 }
 
+.tool-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tool-row-result {
+  justify-content: flex-end;
+}
+
+.ghost {
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--ink-1);
+  border-radius: 10px;
+  padding: 0.36rem 0.62rem;
+  font-weight: 700;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.ghost:hover {
+  border-color: var(--brand);
+  color: var(--brand-2);
+}
+
+.file-input {
+  display: none;
+}
+
 .editor,
 .result {
   width: 100%;
@@ -176,6 +232,10 @@ body {
 
   .policy-panel .editor {
     min-height: 460px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
 }
 
