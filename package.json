@@ -9,7 +9,10 @@
     "dev": "pnpm -r dev",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "check:all": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm compat:node",
+    "compat:node": "node ./scripts/compat-node.mjs",
+    "compat:bun": "bun ./scripts/compat-bun.mjs"
   },
   "keywords": [
     "agent",
@@ -26,6 +29,7 @@
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "eslint": "^10.0.2",
+    "tsup": "^8.5.0",
     "typescript": "^5.9.3"
   }
 }

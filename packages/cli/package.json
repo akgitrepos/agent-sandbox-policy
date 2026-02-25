@@ -10,7 +10,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/index.ts --format esm --clean && node ../../scripts/add-shebang.mjs ./dist/index.js",
     "dev": "tsc --watch",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint src --ext .ts",

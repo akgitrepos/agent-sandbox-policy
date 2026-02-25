@@ -13,7 +13,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/index.ts --format esm --clean",
     "test": "echo \"No tests yet\"",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit"
