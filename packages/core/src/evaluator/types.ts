@@ -1,6 +1,9 @@
 import type { DecisionAction } from '../domain/primitives';
 
 import type { CompiledPolicy, Severity } from '../parser';
+import type { RateLimitEvaluation, RateLimitStore } from '../ratelimit';
+import type { RedactionOutcome } from '../redaction';
+import type { Clock } from '../utils';
 
 export interface ToolRequestEvent {
   readonly schema_version: '1';
@@ -50,6 +53,23 @@ export interface EvaluatorDecision {
   readonly explain: EvaluatorExplain;
 }
 
+export type DecisionStatus =
+  | 'allow'
+  | 'deny'
+  | 'require_approval'
+  | 'allow_with_redaction'
+  | 'deny_rate_limited';
+
+export interface EvaluateEventResult {
+  readonly decision: EvaluatorDecision;
+  readonly status: DecisionStatus;
+  readonly redactedOutput?: unknown;
+  readonly rateLimit: RateLimitEvaluation;
+  readonly redaction: Omit<RedactionOutcome, 'output'>;
+}
+
 export interface EvaluateEventOptions {
   readonly validateEvent?: boolean;
+  readonly clock?: Clock;
+  readonly rateLimitStore?: RateLimitStore;
 }
