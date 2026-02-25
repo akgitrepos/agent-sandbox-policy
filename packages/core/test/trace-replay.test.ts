@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { describe, expect, it } from 'vitest';
 
-import { ReplayError, parseAndCompilePolicy, replayTrace } from '../src';
+import { TraceValidationError, parseAndCompilePolicy, replayTrace } from '../src';
 
 async function readFixture(fileName: string): Promise<string> {
   const path = new URL(`./fixtures/${fileName}`, import.meta.url);
@@ -11,8 +11,36 @@ async function readFixture(fileName: string): Promise<string> {
 
 describe('replayTrace', () => {
   it('replays trace events deterministically and returns summary counts', async () => {
-    const policyYaml = await readFixture('policy.safe-code-agent.yaml');
-    const policy = parseAndCompilePolicy(policyYaml, 'yaml');
+    const policy = parseAndCompilePolicy({
+      version: 1,
+      evaluation: { mode: 'first_match_wins' },
+      defaults: { decision: 'deny' },
+      rules: [
+        {
+          id: 'allow-web-search',
+          match: { stage: 'request', tool: 'web.search' },
+          action: { decision: 'allow' },
+        },
+      ],
+      rate_limits: [
+        {
+          id: 'web-budget',
+          match: { stage: 'request', tool: 'web.search' },
+          limit: { scope: 'per_run', requests: 1, per: '1m' },
+          on_exceed: { decision: 'deny' },
+        },
+      ],
+      redaction: [
+        {
+          id: 'mask-api-key',
+          match: { stage: 'output', tool: 'shell.exec' },
+          apply: {
+            mode: 'text_regex',
+            patterns: [{ regex: '(?i)api_key\\s*=\\s*\\w+', replace: 'api_key=[REDACTED]' }],
+          },
+        },
+      ],
+    });
 
     const trace = {
       schema_version: '1',
@@ -61,7 +89,7 @@ describe('replayTrace', () => {
     expect(replay.summary.denyRateLimitedCount).toBe(1);
   });
 
-  it('throws ReplayError for invalid timestamp values', async () => {
+  it('throws TraceValidationError for schema-invalid trace data', async () => {
     const policyYaml = await readFixture('policy.safe-code-agent.yaml');
     const policy = parseAndCompilePolicy(policyYaml, 'yaml');
 
@@ -82,6 +110,6 @@ describe('replayTrace', () => {
       ],
     };
 
-    expect(() => replayTrace(policy, badTrace)).toThrowError(ReplayError);
+    expect(() => replayTrace(policy, badTrace)).toThrowError(TraceValidationError);
   });
 });
