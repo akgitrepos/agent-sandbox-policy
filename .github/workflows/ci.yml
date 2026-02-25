@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+      - name: Node compatibility
+        run: pnpm compat:node
+
+  bun-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Bun compatibility
+        run: pnpm compat:bun
